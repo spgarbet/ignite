@@ -49,7 +49,7 @@ exec.simulation <- function(inputs)
 
 
 source("./run_IGNITE.r")
-inputs$vN <- 200000
+inputs$vN <- 20 #0000
 inputs$vHorizon <- 1
 
 ###Single Drug 

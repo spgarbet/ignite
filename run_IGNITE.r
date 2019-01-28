@@ -22,24 +22,18 @@ source('./main/event_secular_death.R')
 # Define Panel Test attributes, functions
 all_genotyped <- function()
 {
-  get_attribute(env, 'aGenotyped_CVD')      == 1 &&  # Simvastatin
-  get_attribute(env, 'aGenotyped_CYP2C19')  == 1 &&  # Clopidogrel
-  get_attribute(env, 'aGenotyped_Warfarin') == 1    # Warfarin  
+  get_attribute(env, 'aGenotyped_CYP2C19')  == 1
 }
 
 any_genotyped <- function()
 {
-  get_attribute(env, 'aGenotyped_CVD')     == 1 ||
-  get_attribute(env, 'aGenotyped_CYP2C19') == 1 ||
-  get_attribute(env, 'aGenotyped_Warfarin') == 1 
+  get_attribute(env, 'aGenotyped_CYP2C19') == 1 
 }
 
 panel_test <- function(traj, inputs)
 {
   traj %>% 
-    set_attribute('aGenotyped_CYP2C19', 1)  %>%
-    set_attribute('aGenotyped_CVD',     1)  %>%
-    set_attribute('aGenotyped_Warfarin', 1) %>%
+    set_attribute('aGenotyped_CYP2C19', 1)
     mark("panel_test") %>%
     set_attribute("aPredicted", 2)
 }
@@ -51,30 +45,6 @@ source("./clopidogrel/initial-patient-attributes.R")
 source("./clopidogrel/cleanup.R")
 source("./clopidogrel/PGx-attributes.r")
 source("./clopidogrel/dapt-events.r")
-
-####
-## Simvastatin
-source('./simvastatin/counters.R')
-source('./simvastatin/initial-patient-attributes.R')
-source('./simvastatin/PGx-attributes.R')
-source('./simvastatin/cleanup.R')
-source('./simvastatin/cvd_framingham.R')
-source('./simvastatin/event_cvd.R')
-source('./simvastatin/event_myopathy.R')
-source('./simvastatin/event_statin.R')
-
-## Warfarin
-source('./warfarin/counters.R')
-source('./warfarin/initial-patient-attributes.R')
-source('./warfarin/PGx-attributes.R')
-source('./warfarin/cleanup.R')
-source('./warfarin/event_warfarin.R')
-source('./warfarin/event_in_range.R')
-source('./warfarin/event_90days.R')
-source('./warfarin/event_bleed.R')
-source('./warfarin/event_stroke.R')
-source('./warfarin/event_DVTPE.R')
-source('./warfarin/event_6m_NonAF.R')
 
 #load('./main/NHANES_pop_11_14.rda')
 study_pop <- read.csv("./main/Age_Sex.csv")
@@ -88,35 +58,20 @@ initialize_patient <- function(traj, inputs)
     set_attribute("aGender", function() study_pop$gender[get_attribute(env, "aNo")]) %>% 
     set_attribute("aAge",    function() study_pop$age.mh[get_attribute(env, "aNo")]) %>% 
     
-    # NHANES version
-    #set_attribute("aNo", function() sample(1:nrow(NHANES_pop), 1, prob=1/NHANES_pop$wt)) %>%
-    #set_attribute("aGender",    function() NHANES_pop$gender[get_attribute(env,'aNo')]) %>% 
-    #set_attribute("aAge",       function() NHANES_pop$age[get_attribute(env,'aNo')]) %>% 
-    
-    # Oldest version
-    #set_attribute("aGender",    function() sample(1:2,1,prob=c(1-inputs$vPctFemale,inputs$vPctFemale))) %>% 
-    #set_attribute("aAge",       function() runif(1,inputs$vLowerAge,inputs$vUpperAge)) %>%
-    
     set_attribute("aAgeInitial",function() get_attribute(env, 'aAge'))  %>%
-    assign_clopidogrel_attributes(inputs) %>%
-    assign_simvastatin_attributes(inputs) %>%
-    assign_warfarin_attributes(inputs)
+    assign_clopidogrel_attributes(inputs)
 }
 
 predict_draw <- function(traj, inputs)
 {
   traj %>%
-    predict_clopidogrel_draw(inputs) %>%
-    predict_simvastatin_draw(inputs) %>%
-    predict_warfarin_draw(inputs)
+    predict_clopidogrel_draw(inputs) 
 }
 
 predict_test <- function(traj, inputs)
 {
   traj %>%
-    predict_clopidogrel(inputs) %>%
-    predict_simvastatin(inputs) %>%
-    predict_warfarin(inputs)
+    predict_clopidogrel(inputs)
 }
 
 # Must Be Run After The Initial Event Times Have Been Determined 
@@ -164,9 +119,7 @@ cleanup_on_termination <- function(traj)
   traj %>% 
     release("time_in_model") %>%
     cleanup_clopidogrel() %>%
-    cleanup_aspirin() %>% 
-    cleanup_simvastatin() %>%
-    cleanup_warfarin()
+    cleanup_aspirin()
 }
 
 terminate_simulation <- function(traj, inputs)
@@ -195,38 +148,7 @@ event_registry <- list(
        func          = terminate_simulation,
        reactive      = FALSE),
   
-  #### Simvastatin Events
-  list(name          = "Start of Statin",
-       attr          = "aStartStatin",
-       time_to_event = days_till_statin,
-       func          = prescribe_statin,
-       reactive      = FALSE),
-  list(name          = "Mild Myopathy",
-       attr          = "aMildMyoTime",
-       time_to_event = days_till_mild_myopathy,
-       func          = mild_myopathy,
-       reactive      = TRUE),
-  list(name          = "Moderate Myopathy",
-       attr          = "aModMyoTime",
-       time_to_event = days_till_mod_myopathy,
-       func          = mod_myopathy,
-       reactive      = TRUE),
-  list(name          = "Severe Myopathy",
-       attr          = "aSevMyoTime",
-       time_to_event = days_till_sev_myopathy,
-       func          = sev_myopathy,
-       reactive      = TRUE),
-  list(name          = "Cardiovascular Disease",
-       attr          = "aCVDTime",
-       time_to_event = days_till_cvd,
-       func          = cvd,
-       reactive      = TRUE),
-  list(name          = "Reassess CVD Risk",
-       attr          = "aCVDReassess",
-       time_to_event = days_till_reassess_cvd,
-       func          = reassess_cvd,
-       reactive      = FALSE),
-  
+
   #### Clopidogrel Events
   list(name          = "DAPT Initialized",
        attr          = "aTimeDAPTInitialized",
@@ -287,55 +209,14 @@ event_registry <- list(
        attr          = "aDAPTStroke",
        time_to_event = days_to_stroke,
        func          = dapt_stroke_event,
-       reactive      = FALSE),  
-  
-  #### Warfarin Events
-  list(name          = "Start Warfarin",
-       attr          = "aTimeToStartWarfarin",
-       time_to_event = days_till_warfarin,
-       func          = prescribe_warfarin,
-        reactive      = FALSE),
-  list(name          = "Get in range",
-       attr          = "aTimeToInRange",
-       time_to_event = days_till_in_range,
-       func          = get_in_range,
-       reactive      = FALSE),
-  list(name          = "Pass 90 days",
-        attr          = "aTimeTo90d",
-        time_to_event = days_till_90d,
-        func          = reach_90d,
-        reactive      = FALSE),
-  list(name          = "Pass 6 months",
-       attr          = "aTimeTo6m",
-       time_to_event = days_till_6m,
-       func          = reach_6m_NonAF,
-       reactive      = FALSE),
-  list(name          = "Major Bleed",
-       attr          = "aTimeToMajorBleed",
-       time_to_event = days_till_major_bleed,
-       func          = major_bleed_event,
-       reactive      = FALSE),
-  list(name          = "Minor Bleed",
-       attr          = "aTimeToMinorBleed",
-       time_to_event = days_till_minor_bleed,
-       func          = minor_bleed_event,
-       reactive      = FALSE),
-   list(name          = "Stroke",
-        attr          = "aTimeToStroke",
-        time_to_event = days_till_stroke,
-        func          = stroke_event,
-        reactive      = FALSE),
-   list(name          = "DVTPE",
-        attr          = "aTimeToDVTPE",
-        time_to_event = days_till_DVTPE,
-        func          = DVTPE_event,
-        reactive      = FALSE)
+       reactive      = FALSE)
+
 )
 
 #####
 ## Counters
 source("./main/counters.R")
-counters <- c(counters.gen, counters.dapt, counters.simvastatin, counters.warfarin)
+counters <- c(counters.gen, counters.dapt)
 
 
 #####################################################################
