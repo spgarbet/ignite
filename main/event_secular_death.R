@@ -6,7 +6,7 @@ source('./main/age-gompertz.R')
 # how long till the patient would die a secular death.
 #
 # NOTE: The variable in must be named attrs
-days_till_death <- function(attrs, inputs)
+days_till_death <- function(inputs)
 {
   #age       <- attrs[['aAge']]
   #death_age <- ageAtDeath(age, attrs[['aGender']])

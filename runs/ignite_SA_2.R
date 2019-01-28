@@ -1,6 +1,6 @@
 ###full run
 ### Single Drug - low Weibull
-setwd("./IGNITE")
+#setwd("..")
 pkg = list("simmer",
            "data.table",
            "plyr",
@@ -27,7 +27,7 @@ sdt <- c(12345,
          10)
 
 args <- commandArgs(trailing = TRUE)
-num_seed <- as.integer(args[1])
+num_seed <- 1 # as.integer(args[1])
 
 env  <- simmer("RIGHT-v1.1")
 
@@ -101,7 +101,7 @@ for(Istrategy in 0:4) {
   
   if(is.null(results)) { results <- run } else  {results <- rbind(results, run)}
   rm(run)
-  }
+}
 
 
 ###events summary
