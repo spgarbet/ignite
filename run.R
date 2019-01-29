@@ -75,20 +75,30 @@ set.strategy <- function(inputs, strategy)
 
 
 
-inputs$vN <- 20 #0000
+inputs$vN <- 200 #0000
 ###events summary
+
+chunksize <- 20
 
 run.model <- function(inputs, strategy, seed)
 {
   inputs <- set.strategy(inputs, strategy)
-  set.seed(seed)
-  cost.qaly(data.table(exec.simulation(inputs)), inputs)
+  
+  # Run in chucks
+  runs      <- ceiling(inputs$vN / chunksize)
+  inputs$vN <- chunksize
+  result <- sapply(1:runs, function(n) {
+    set.seed(seed+runs*20000)
+    cost.qaly(data.table(exec.simulation(inputs)), inputs)
+  })
+  rowSums(result)/runs
 }
 
-ignite <- function(inputs, seed, strategies=0:4)
+ignite <- function(inputs, seed, strategies=c(0, 2, 3))
 {
   result <- unlist(lapply(strategies, function(x) run.model(inputs, x, seed)))
   names(result) <- paste0(c("dQALY", "dCOST"), rep(strategies, each=2))
   result 
 }
 
+ignite(inputs, 1)
