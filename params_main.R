@@ -33,10 +33,6 @@ clopidogrel = list(
   vCYP2C19.Rapid            = 0.260, #IGNITE input - Jan
   vCYP2C19.Unknown          = 0.038, #IGNITE input - Jan
   
-  # Indication Paramters (Weibull) source: VUMC data -- files is ./reference/WCS_KM_Distribution_Generation.pdf
-  vDAPTShape                = 0.59,
-  vDAPTScale                = 60475.53,
-  
   # This parameter governs whether repeat DAPT therapy is more or less likely after having one.
   vRRRepeat.DAPT            = epsilon,
   
@@ -165,8 +161,7 @@ clopidogrel = list(
 inputs <- list(
   # Population Parameters
   vN           = 1000,   # Patients to simulate
-  vNIter       = 4,      # Number of Iterations (parallel processing)
-  vHorizon     = 1,      # Length of simulation upon a patient entering
+  vHorizon     = 1,      # Length of simulation upon a patient entering (1 year)
 
   # Strategies
   vPreemptive  = "None", # Can be one of following: "None", "Panel", or "Age >= 50"

@@ -14,19 +14,7 @@ clo_clock <- function(traj)
 
 ####
 ## Assign Time to DAPT
-days_till_dapt <- function( inputs) 
-{
-  if (inputs$vDrugs$vClopidogrel)
-  {
-    aRandUnif = runif(n=1,min=0,max=1) 
-    aLPEvent = get_attribute(env, 'aRRDAPT')
-    inputs$clopidogrel$vDAPTScale * (-log(aRandUnif)*exp(-log(aLPEvent)))^(1/inputs$clopidogrel$vDAPTShape)
-  } else 
-  {
-    inputs$vHorizon*365+1
-  }
-}
-
+days_till_dapt <- function( inputs) 0.05 # Ignite always starts on DAPT
 
 
 ######
