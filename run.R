@@ -1,24 +1,22 @@
-
-
-pkg = list("simmer",
-           "data.table",
-           "plyr",
-           "dplyr",
-           "tidyr",
-           "reshape2",
-           "ggplot2",
-           "msm",
-           "quantmod")
-invisible(lapply(pkg, require, character.only = TRUE))
+pkg <- c("simmer",
+         "data.table",
+         "plyr",
+         "dplyr",
+         "tidyr",
+         "reshape2",
+         "ggplot2",
+         "msm",
+         "quantmod")
+invisible(sapply(pkg, require, character.only=TRUE))
 
 source("model.R")
 source("costs.R")
 
-env  <- simmer("RIGHT-v1.1")
+env  <- simmer("IGNITE-v1.2")
 
 exec.simulation <- function(inputs)
 {
-  env  <<- simmer("RIGHT-v1.1")
+  env  <<- simmer("IGNITE-v1.2")
   traj <- simulation(env, inputs)
   env %>% create_counters(counters)
   
@@ -80,11 +78,17 @@ set.strategy <- function(inputs, strategy)
 inputs$vN <- 20 #0000
 ###events summary
 
-ignite <- function(inputs, strategy, seed)
+run.model <- function(inputs, strategy, seed)
 {
   inputs <- set.strategy(inputs, strategy)
   set.seed(seed)
   cost.qaly(data.table(exec.simulation(inputs)), inputs)
 }
 
-ignite(inputs, 0, 1)
+ignite <- function(inputs, seed, strategies=0:4)
+{
+  result <- unlist(lapply(strategies, function(x) run.model(inputs, x, seed)))
+  names(result) <- paste0(c("dQALY", "dCOST"), rep(strategies, each=2))
+  result 
+}
+
