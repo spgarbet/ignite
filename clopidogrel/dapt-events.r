@@ -12,11 +12,6 @@ clo_clock <- function(traj)
     set_attribute("aSecularDeathTime",function() now(env) + days_till_death(inputs)) 
 }  
 
-####
-## Assign Time to DAPT
-days_till_dapt <- function( inputs) 0.05 # Ignite always starts on DAPT
-
-
 ######
 ## Assign DAPT Medication
 #for all genotyped patients through preemptive strategies (Panel), physician can choose to use or ignore the test results

@@ -39,11 +39,11 @@ panel_test <- function(traj, inputs)
 
 #####
 ## Clopidogrel
-source("./clopidogrel/counters.R")
-source("./clopidogrel/initial-patient-attributes.R")
-source("./clopidogrel/cleanup.R")
-source("./clopidogrel/PGx-attributes.r")
-source("./clopidogrel/dapt-events.r")
+source("clopidogrel/counters.R")
+source("clopidogrel/initial-patient-attributes.R")
+source("clopidogrel/cleanup.R")
+source("clopidogrel/PGx-attributes.r")
+source("clopidogrel/dapt-events.r")
 
 #load('./main/NHANES_pop_11_14.rda')
 study_pop <- read.csv("./main/Age_Sex.csv")
@@ -58,7 +58,8 @@ initialize_patient <- function(traj, inputs)
     set_attribute("aAge",    function() study_pop$age.mh[get_attribute(env, "aNo")]) %>% 
     
     set_attribute("aAgeInitial",function() get_attribute(env, 'aAge'))  %>%
-    assign_clopidogrel_attributes(inputs)
+    assign_clopidogrel_attributes(inputs) %>%
+    dapt(inputs)
 }
 
 # Must Be Run After The Initial Event Times Have Been Determined 
@@ -123,11 +124,6 @@ event_registry <- list(
   
 
   #### Clopidogrel Events
-  list(name          = "DAPT Initialized",
-       attr          = "aTimeDAPTInitialized",
-       time_to_event = days_till_dapt,
-       func          = dapt,
-       reactive      = FALSE) ,
   list(name          = "DAPT Ended",
        attr          = "aDAPTEnded",
        time_to_event = dapt_end_time,
