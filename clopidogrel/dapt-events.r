@@ -31,7 +31,7 @@ days_till_dapt <- function( inputs)
 
 ######
 ## Assign DAPT Medication
-#for all genotyped patients through preemptive strategies (Panel or PREDICT), physician can choose to use or ignore the test results
+#for all genotyped patients through preemptive strategies (Panel), physician can choose to use or ignore the test results
 #under reactive strategies, physician can also choose to order test for those not genotyped
 clopidogrel_reactive_strategy <- function(traj, inputs)
 {
@@ -266,23 +266,20 @@ dapt_end <- function(traj,inputs)
 
 time_to_ST <- function(inputs) #assume alt is always Ticagrelor 
 {
+  rr <- 1.0
   if (get_attribute(env, "aOnDAPT")!=1) return(inputs$vHorizon*365+1) else
   {
     if (get_attribute(env, 'aCYP2C19') == 1 & get_attribute(env, 'aDAPT.Rx')==1) { #LOF Clopidogrel
       rates = c(inputs$clopidogrel$vRiskST30.LOF,inputs$clopidogrel$vRiskST365.LOF)
-      rr = inputs$clopidogrel$vRR.ST.LOF
     } else if (get_attribute(env, 'aCYP2C19') == 1 & get_attribute(env, 'aDAPT.Rx')==2) { #LOF Alt
       rates = c(inputs$clopidogrel$vRiskST30.Alt.LOF,inputs$clopidogrel$vRiskST365.Alt.LOF)
-      rr = inputs$clopidogrel$vRR.ST.Alt.LOF
     } else if (get_attribute(env, 'aCYP2C19') != 1 & get_attribute(env, 'aDAPT.Rx')==1) { #Non-LOF Clo
       rates = c(inputs$clopidogrel$vRiskST30.Non,inputs$clopidogrel$vRiskST365.Non)
-      rr = inputs$clopidogrel$vRR.ST.Non
     } else if (get_attribute(env, 'aCYP2C19') != 1 & get_attribute(env, 'aDAPT.Rx')==2) { #Non-LOF Alt
             rates = c(inputs$clopidogrel$vRiskST30.Alt.Non,inputs$clopidogrel$vRiskST365.Alt.Non)
-            rr = inputs$clopidogrel$vRR.ST.Alt.Non
     } else if (get_attribute(env, 'aDAPT.Rx')==4) { #Aspirin
       rates = c(inputs$clopidogrel$vRiskST30.Aspirin,inputs$clopidogrel$vRiskST365.Aspirin)
-      rr = inputs$clopidogrel$vRR.ST.Aspirin
+      rr <- inputs$clopidogrel$vRR.ST.Aspirin
     } else stop("Unhandled ST t2e")
      
     days = c(30,335)
@@ -369,30 +366,27 @@ ST_event = function(traj, inputs)
 
 time_to_MI = function( inputs) 
 {
+  rr <- 1.0
   if (get_attribute(env, "aOnDAPT")!=1) return(inputs$vHorizon*365+1) else
   {
     # Relative Risk
     if (get_attribute(env, 'aCYP2C19') == 1 & get_attribute(env, 'aDAPT.Rx')==1) { #LOF Clopidogrel
       rates = c(inputs$clopidogrel$vRiskMI30.LOF,inputs$clopidogrel$vRiskMI365.LOF)
-      rr = inputs$clopidogrel$vRR.MI.LOF
     } else if (get_attribute(env, 'aCYP2C19') == 1 & get_attribute(env, 'aDAPT.Rx')==2) { #LOF Alt
       rates = c(inputs$clopidogrel$vRiskMI30.Alt.LOF,inputs$clopidogrel$vRiskMI365.Alt.LOF)
-      rr = inputs$clopidogrel$vRR.MI.Alt.LOF
     } else if (get_attribute(env, 'aCYP2C19') != 1 & (get_attribute(env, 'aDAPT.Rx')==1)) { #Non-LOF, Clo 
       rates = c(inputs$clopidogrel$vRiskMI30.Non,inputs$clopidogrel$vRiskMI365.Non)
-      rr = inputs$clopidogrel$vRR.MI.Non
     } else if (get_attribute(env, 'aCYP2C19') != 1 & (get_attribute(env, 'aDAPT.Rx')==2)) { #Non-LOF, Alt 
-            rates = c(inputs$clopidogrel$vRiskMI30.Alt.Non,inputs$clopidogrel$vRiskMI365.Alt.Non)
-            rr = inputs$clopidogrel$vRR.MI.Alt.Non
+      rates = c(inputs$clopidogrel$vRiskMI30.Alt.Non,inputs$clopidogrel$vRiskMI365.Alt.Non)
     } else if (get_attribute(env, 'aDAPT.Rx')==4) { #Aspirin
       rates = rep(inputs$clopidogrel$vRiskMI.Aspirin,2)
-      rr = rep(inputs$clopidogrel$vRR.MI.Aspirin,2)
+      rr    = inputs$clopidogrel$vRR.MI.Aspirin
     } else stop("Unhandled MI t2e")
     
     days = c(30,335)
     
     # Convert To Probability 
-    rates2 = (- (log ( 1 - rates)*rr) / days)
+    rates2 = (- (log( 1 - rates)*rr) / days)
     rates2 <- c(rates2, epsilon)
     
     ageOfTherapy <- now(env)
@@ -404,7 +398,6 @@ time_to_MI = function( inputs)
       times  <- times[2:3]
     } 
     times[1] <- 0
-    
     timeMI = rpexp(1, rate=rates2, t=times)
     return(timeMI)
     
@@ -559,7 +552,7 @@ RV_event = function(traj, inputs)
 # these were associated with increased costs and decreased quality-adjusted life years (QALYs), but 
 # did not increase perioperative mortality.
 
-time_to_ExtBleed = function( inputs) 
+time_to_ExtBleed = function(inputs) 
 {
   if (get_attribute(env, "aOnDAPT")!=1) return(inputs$vHorizon*365+1) else
   {
@@ -780,25 +773,20 @@ days_to_stroke <- function( inputs)
   {
     if (get_attribute(env, 'aCYP2C19') == 1 & get_attribute(env, 'aDAPT.Rx')==1) { #LOF Clopidogrel
       rates = c(inputs$clopidogrel$vRiskStroke30.LOF,inputs$clopidogrel$vRiskStroke365.LOF)
-      rr = inputs$clopidogrel$vRR.Stroke.LOF
     } else if (get_attribute(env, 'aCYP2C19') == 1 & get_attribute(env, 'aDAPT.Rx')==2) { #LOF Alt
       rates = c(inputs$clopidogrel$vRiskStroke30.Alt.LOF,inputs$clopidogrel$vRiskStroke365.Alt.LOF)
-      rr = inputs$clopidogrel$vRR.Stroke.Alt.LOF
     } else if (get_attribute(env, 'aCYP2C19') != 1 & (get_attribute(env, 'aDAPT.Rx')==1)) { #Non-LOF, Clo
       rates = c(inputs$clopidogrel$vRiskStroke30.Non,inputs$clopidogrel$vRiskStroke365.Non)
-      rr = inputs$clopidogrel$vRR.Stroke.Non
     } else if (get_attribute(env, 'aCYP2C19') != 1 & (get_attribute(env, 'aDAPT.Rx')==2 )) { #Non-LOF, Alt
       rates = c(inputs$clopidogrel$vRiskStroke30.Alt.Non,inputs$clopidogrel$vRiskStroke365.Alt.Non)
-      rr = inputs$clopidogrel$vRR.Stroke.Alt.Non
     } else if (get_attribute(env, 'aDAPT.Rx')==4) { #Aspirin
       rates = c(epsilon,epsilon)
-      rr = c(1,1)
     } else stop("Unhandled ST t2e")    
  
     days = c(30,335)
     
     # Convert To Probability 
-    rates2 = (- (log ( 1 - rates)*rr) / days)
+    rates2 = (- (log ( 1 - rates)) / days)
     rates2 <- c(rates2, epsilon)
     
     ageOfTherapy <- now(env)

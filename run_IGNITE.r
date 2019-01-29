@@ -34,8 +34,7 @@ panel_test <- function(traj, inputs)
 {
   traj %>% 
     set_attribute('aGenotyped_CYP2C19', 1)
-    mark("panel_test") %>%
-    set_attribute("aPredicted", 2)
+    mark("panel_test")
 }
 
 #####
@@ -62,51 +61,25 @@ initialize_patient <- function(traj, inputs)
     assign_clopidogrel_attributes(inputs)
 }
 
-predict_draw <- function(traj, inputs)
-{
-  traj %>%
-    predict_clopidogrel_draw(inputs) 
-}
-
-predict_test <- function(traj, inputs)
-{
-  traj %>%
-    predict_clopidogrel(inputs)
-}
-
 # Must Be Run After The Initial Event Times Have Been Determined 
-# For predict to work
 
 # No modification required for adding more drug models
 preemptive_strategy <- function(traj, inputs)
 {
-  traj <- predict_draw(traj, inputs) # Always execute predict random draw to keep seeded random number
-                                     # states the same
-  
   # Note this doesn't have to use branch, because it's a global that every trajectory gets
   if        (inputs$vPreemptive == "None"     )
   {
     traj # Do nothing
   } else if (inputs$vPreemptive == "Panel"    )
   {
-    traj %>% panel_test(inputs) %>% set_attribute("aPredicted", 1)
-  } else if (inputs$vPreemptive == "PREDICT"  )
-  {
-    traj %>%
-      predict_test(inputs) %>%
-      branch(
-        function() ifelse(any_genotyped(),2,1),
-        continue=rep(TRUE,2),
-        trajectory() %>% timeout(0), # Nothing genotyped, do nothing
-        trajectory() %>% panel_test(inputs) %>% set_attribute("aPredicted", 1) # Something was genotyped via PREDICT, do panel
-      )
+    traj %>% panel_test(inputs)
   } else if (inputs$vPreemptive == "Age >= 50")
   {
     traj %>%
     branch(
       function() if(get_attribute(env,'aAge') >= 50) 1 else 2,
       continue = c(TRUE, TRUE),
-      trajectory() %>% panel_test(inputs) %>% set_attribute("aPredicted", 1), 
+      trajectory() %>% panel_test(inputs), 
       trajectory() %>% timeout(0)  # Do nothing
     )
   } else stop("Unhandled Preemptive Strategy")
