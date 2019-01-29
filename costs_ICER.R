@@ -11,10 +11,6 @@ options("scipen"=100, "digits"=6)
 annual_discount_rate <- 0.03
 
 cont_discount_rate <- -log(1-annual_discount_rate) # Yearly Time Scale
-discounted_cost <- function(start_day, end_day, base_yearly_cost, rate = cont_discount_rate)
-{
-  base_yearly_cost / (exp(-rate*((end_day-start_day)/365)))
-}
 
 discount_value <- function(value,ar=annual_discount_rate,A,B)
 {
@@ -24,20 +20,10 @@ discount_value <- function(value,ar=annual_discount_rate,A,B)
 
 discount = function(value,ar=annual_discount_rate,A) value / (1+ar)^(A/365.25)
 
-cost_cat <- data.frame(resource=c("panel_test","single_test",
-                                  "clopidogrel","ticagrelor","prasugrel","aspirin","warfarin","simvastatin","alt_simvastatin",
-                                  "revasc_pci","revasc_cabg","bleed_ext_maj_nonfatal","bleed_int_maj_nonfatal","bleed_min_nonfatal","bleed_fatal",
-                                  "st_pci","st_cabg","mi_cabg","mi_pci","mi_med_manage","mild_myopathy","mod_myopathy","sev_myopathy","rahbdo_death",
-                                  "cvd","cvd_death","out_of_range","in_range","MajorBleed_ICH","MajorBleed_ICH_Fatal","MajorBleed_GI","MajorBleed_GI_Fatal","MajorBleed_Other",
-                                  "MajorBleed_Other_Fatal","MinorBleed","Stroke_MinorDeficit","Stroke_MajorDeficit","Stroke_Fatal","DVTPE_Fatal","DVT","PE", "cabg_bleed",
-                                  "dapt_stroke","cardio_death"),
-                       cat=c(rep(1,2),rep(2,7),rep(3,35))
-)
-
 cost.qaly <- function(raw,inputs) 
 {
-  arrivals <- raw %>%  mutate(name = paste0(name,"_",replication))
-  #arrivals <- results %>%  mutate(name = paste0(name,"_",replication))
+  arrivals <- raw #%>%  mutate(name = paste0(name,"_",replication))
+
   # Make all resources a factor (this allows for null events to still get summaries)
   arrivals$resource <- factor(arrivals$resource, counters)
   
@@ -100,11 +86,7 @@ cost.qaly <- function(raw,inputs)
     dplyr::mutate(qaly.d = discount_value(utility,A=value,B=time)) #discounted QALY for each period of time 
   
   QALY = qaly.i %>% group_by(name) %>% dplyr::summarise(dQALY = sum(qaly.d)/365.25)
-  COST = arrivals %>% filter(discounted_cost>0) %>% group_by(name,resource) %>% dplyr::summarise(dCOST = sum(discounted_cost)) %>% merge(cost_cat,by="resource",all.x = TRUE)
-  c1 <- COST %>% group_by(name) %>% dplyr::summarize(total=sum(dCOST))
-  c2 <- COST %>% group_by(name) %>% filter(cat==1) %>% dplyr::summarize(test=sum(dCOST))
-  c3 <- COST %>% group_by(name) %>% filter(cat==2) %>% dplyr::summarize(drug=sum(dCOST))
-  c4 <- COST %>% group_by(name) %>% filter(cat==3) %>% dplyr::summarize(event=sum(dCOST))
-  out <- QALY %>% left_join(c1,by="name") %>% left_join(c2,by="name") %>% left_join(c3,by="name") %>% left_join(c4,by="name")
+  COST = arrivals %>% filter(discounted_cost>0) %>% group_by(name) %>% dplyr::summarise(dCOST = sum(discounted_cost))
+  out <- QALY %>% left_join(COST,by="name") 
   return(out)
 }
