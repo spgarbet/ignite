@@ -1,6 +1,5 @@
-###full run
-### Single Drug - low Weibull
-#setwd("..")
+
+
 pkg = list("simmer",
            "data.table",
            "plyr",
@@ -11,8 +10,11 @@ pkg = list("simmer",
            "msm",
            "quantmod")
 invisible(lapply(pkg, require, character.only = TRUE))
-rm(list=ls())
 
+source("model.R")
+source("costs.R")
+
+# FIXME DELETE
 #seed_01
 sdt <- c(12345,
          54321,
@@ -25,6 +27,7 @@ sdt <- c(12345,
          5,
          10)
 
+# FIXME DELETE
 args <- commandArgs(trailing = TRUE)
 num_seed <- 1 # as.integer(args[1])
 
@@ -47,7 +50,6 @@ exec.simulation <- function(inputs)
 
 
 
-source("./run_IGNITE.r")
 inputs$vN <- 20 #0000
 inputs$vHorizon <- 1
 
@@ -102,7 +104,7 @@ for(Istrategy in 0:4) {
 ###events summary
 DT <- data.table(results)
 DT[, .N, by = list(resource, strategy)]
-summ <- DT[, .N, by = list(resource, strategy)]
-save(summ,file=paste0("/gpfs23/data/h_imph/gravesj/right/sum_ignite_SA_",num_seed,"_p.rda"))
-save(results,file=paste0("/gpfs23/data/h_imph/gravesj/right/raw_ignite_SA_",num_seed,"_p.rda"))
+#summ <- DT[, .N, by = list(resource, strategy)]
+#save(summ,file=paste0("/gpfs23/data/h_imph/gravesj/right/sum_ignite_SA_",num_seed,"_p.rda"))
+#save(results,file=paste0("/gpfs23/data/h_imph/gravesj/right/raw_ignite_SA_",num_seed,"_p.rda"))
 

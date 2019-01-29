@@ -1,10 +1,5 @@
 ####### Costs & QALYs
 #If run after the main run, no need to reload inputs & counters below.
-source('inputs_IGNITE.R')
-source("./clopidogrel/counters.R")
-source("./main/counters.R")
-counters  <- c(counters.gen, counters.dapt)
-#inputs$vN <- 200000
 
 ###########
 options("scipen"=100, "digits"=6)
@@ -35,7 +30,7 @@ cost.qaly <- function(raw,inputs)
   # Truncate to end of study or life
   end_times <- arrivals[arrivals$resource == 'time_in_model',]
   arrivals$end_time <- pmin(arrivals$end_time, 
-                            plyr::join(arrivals[,c("name","end_time")], end_times[,c("name","end_time")], by="name", match="first")[,3])
+                            (plyr::join(arrivals[,c("name","end_time")], end_times[,c("name","end_time")], by="name", match="first"))$end_time)
   
   # Compute total activity times
   arrivals$activity_time <- arrivals$end_time - arrivals$start_time
@@ -88,5 +83,6 @@ cost.qaly <- function(raw,inputs)
   QALY = qaly.i %>% group_by(name) %>% dplyr::summarise(dQALY = sum(qaly.d)/365.25)
   COST = arrivals %>% filter(discounted_cost>0) %>% group_by(name) %>% dplyr::summarise(dCOST = sum(discounted_cost))
   out <- QALY %>% left_join(COST,by="name") 
-  return(out)
+  
+  c(dQALY=mean(out$dQALY), dCost=mean(out$dCOST))
 }

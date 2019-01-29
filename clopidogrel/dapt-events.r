@@ -1,14 +1,14 @@
 clo_clock <- function(traj)
 {
   traj %>%
-    set_attribute("aST",function() now(env) + time_to_ST(inputs)) %>% 
-    set_attribute("aMI",function() now(env) + time_to_MI(inputs)) %>% 
-    set_attribute("aRV",function() now(env) + time_to_RV(inputs)) %>% 
-    set_attribute("aExtBleed",function() now(env) + time_to_ExtBleed(inputs)) %>% 
-    set_attribute("aIntBleed",function() now(env) + time_to_IntBleed(inputs)) %>% 
-    set_attribute("aTIMIMinor",function() now(env) + time_to_TIMIMinor(inputs)) %>%
-    set_attribute("aFatalBleed",function() now(env) + time_to_FatalBleed(inputs)) %>% 
-    set_attribute("aDAPTStroke",function() now(env) + days_to_stroke(inputs)) %>%
+    set_attribute("aST",              function() now(env) + time_to_ST(inputs)) %>% 
+    set_attribute("aMI",              function() now(env) + time_to_MI(inputs)) %>% 
+    set_attribute("aRV",              function() now(env) + time_to_RV(inputs)) %>% 
+    set_attribute("aExtBleed",        function() now(env) + time_to_ExtBleed(inputs)) %>% 
+    set_attribute("aIntBleed",        function() now(env) + time_to_IntBleed(inputs)) %>% 
+    set_attribute("aTIMIMinor",       function() now(env) + time_to_TIMIMinor(inputs)) %>%
+    set_attribute("aFatalBleed",      function() now(env) + time_to_FatalBleed(inputs)) %>% 
+    set_attribute("aDAPTStroke",      function() now(env) + days_to_stroke(inputs)) %>%
     set_attribute("aSecularDeathTime",function() now(env) + days_till_death(inputs)) 
 }  
 

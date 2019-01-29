@@ -13,11 +13,11 @@
 # Define Simulation Scenario
 ##
 ####
-source("./inputs_IGNITE.R")
+source("params_main.R")
 
 ####
 ## Secular Death
-source('./main/event_secular_death.R')
+source('main/event_secular_death.R')
 
 # Define Panel Test attributes, functions
 all_genotyped <- function()
