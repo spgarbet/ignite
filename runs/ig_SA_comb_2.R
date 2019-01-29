@@ -1,9 +1,4 @@
-setwd("./IGNITE")
-library(data.table)
-library(plyr)
-library(dplyr)
-library(tidyr)
-library(reshape2)
+
 
 ###raw results
 print("raw")

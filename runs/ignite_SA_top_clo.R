@@ -1,9 +1,3 @@
-setwd("./IGNITE")
-# library(data.table)
-library(plyr)
-library(dplyr)
-library(tidyr)
-library(reshape2)
 
 #individual cost
 costi <- NULL

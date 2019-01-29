@@ -1,9 +1,4 @@
-setwd("./IGNITE")
-library(data.table)
-library(plyr)
-library(dplyr)
-library(tidyr)
-library(reshape2)
+
 
 fct_range <- seq(0.75,2,by=0.25)
 args <- commandArgs(trailing = TRUE)

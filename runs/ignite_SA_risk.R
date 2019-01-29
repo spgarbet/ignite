@@ -53,12 +53,8 @@ inputs$vN <- 200000
 inputs$vHorizon <- 1
 
 ###Single Drug 
-inputs$vDrugs = list(vSimvastatin = F, 
-                     vWarfarin = F,
-                     vClopidogrel = T)
-#inputs$warfarin$vscale_timetowarfarin <- epsilon
+inputs$vDrugs = list(vClopidogrel = T)
 inputs$clopidogrel$vDAPTScale <- epsilon
-#inputs$simvastatin$vScale <- epsilon
 inputs$clopidogrel$vRRRepeat.DAPT <- 0 #only for low-weibull runs, to fix retrigger clopidogrel prescription
 
 

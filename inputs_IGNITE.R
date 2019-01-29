@@ -201,10 +201,10 @@ inputs <- list(
   vSwitch = "None", # Can be one of following: "None", "All","Genotype"; trigger 30-day drug switch event
 
 # Control Which Drugs Are Run in the Model 
-  vDrugs       = list(vSimvastatin = FALSE),
+  vDrugs       = list(vClopidogrel = TRUE),
 
 # CURRENTLY PANEL IS FOR ALL DRUGS ???
-  vPanel       = list(vSimvastatin = TRUE),
+  vPanel       = list(vClopidogrel = TRUE),
 
   # Drug specific model parameters
   clopidogrel = clopidogrel,

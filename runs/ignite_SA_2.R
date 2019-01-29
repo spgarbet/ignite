@@ -8,7 +8,6 @@ pkg = list("simmer",
            "tidyr",
            "reshape2",
            "ggplot2",
-           "downloader",
            "msm",
            "quantmod")
 invisible(lapply(pkg, require, character.only = TRUE))
@@ -53,12 +52,8 @@ inputs$vN <- 20 #0000
 inputs$vHorizon <- 1
 
 ###Single Drug 
-inputs$vDrugs = list(vSimvastatin = F, 
-                     vWarfarin = F,
-                     vClopidogrel = T)
-#inputs$warfarin$vscale_timetowarfarin <- epsilon
+inputs$vDrugs = list(vClopidogrel = T)
 inputs$clopidogrel$vDAPTScale <- epsilon
-#inputs$simvastatin$vScale <- epsilon
 inputs$clopidogrel$vRRRepeat.DAPT <- 0 #only for low-weibull runs, to fix retrigger clopidogrel prescription
 
 

@@ -1,18 +1,12 @@
 ####### Costs & QALYs
 #If run after the main run, no need to reload inputs & counters below.
 source('inputs_IGNITE.R')
-source('./simvastatin/counters.R')
 source("./clopidogrel/counters.R")
-source('./warfarin/counters.R')
 source("./main/counters.R")
 counters <- c(counters.gen, counters.dapt, counters.simvastatin, counters.warfarin)
 inputs$vN <- 100000
 
 ###########
-#library(plyr)
-#library(dplyr)
-#library(tidyr)
-#library(reshape2)
 options("scipen"=100, "digits"=10)
 
 #1: genetic tests
