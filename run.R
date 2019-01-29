@@ -12,6 +12,8 @@ invisible(sapply(pkg, require, character.only=TRUE))
 source("model.R")
 source("costs.R")
 
+progress   <- function(...) cat(date(), ' ', paste0(...), '\n')
+
 env  <- simmer("IGNITE-v1.2")
 
 exec.simulation <- function(inputs)
@@ -75,10 +77,9 @@ set.strategy <- function(inputs, strategy)
 
 
 
-inputs$vN <- 200 #0000
-###events summary
+inputs$vN <- 2000000
 
-chunksize <- 20
+chunksize <- 100000
 
 run.model <- function(inputs, strategy, seed)
 {
@@ -88,6 +89,7 @@ run.model <- function(inputs, strategy, seed)
   runs      <- ceiling(inputs$vN / chunksize)
   inputs$vN <- chunksize
   result <- sapply(1:runs, function(n) {
+    progress("Strategy ", strategy, ", chunk ", n)
     set.seed(seed+runs*20000)
     cost.qaly(data.table(exec.simulation(inputs)), inputs)
   })
