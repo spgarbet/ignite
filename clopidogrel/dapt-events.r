@@ -105,7 +105,7 @@ assign_DAPT_medication <- function(traj,inputs)
       trajectory() %>% seize("aspirin") %>% set_attribute("aAspirin",1),
       trajectory() %>% timeout(0)
      )
-  }
+}
 
 
 
@@ -464,15 +464,13 @@ time_to_RV = function( inputs)
 {
   if (get_attribute(env, "aOnDAPT")!=1) return(inputs$vHorizon*365+1) else
   {
-    # Relative Risk
-    rr = get_attribute(env, "aRR.DAPT.RV")
 
     # Baseline Risk #adjustment for IGNITE
     rates = c(inputs$clopidogrel$vRiskRV365,inputs$clopidogrel$vRiskRVgt365)
     days = c(365,365*3)
     
     # Convert To Probability 
-    rates2 = (- (log ( 1 - rates)*rr) / days)
+    rates2 = (- (log ( 1 - rates)) / days)
     rates2 <- c(rates2, epsilon)
     
     ageOfTherapy <- now(env)
@@ -540,7 +538,7 @@ time_to_ExtBleed = function(inputs)
   if (get_attribute(env, "aOnDAPT")!=1) return(inputs$vHorizon*365+1) else
   {
     # Relative Risk
-    rr = get_attribute(env, "aRR.DAPT.ExtBleed")
+    rr = 1
     if (get_attribute(env, 'aCYP2C19') == 1 & get_attribute(env, 'aDAPT.Rx')==1) rr = inputs$clopidogrel$vRR.Bleed.LOF
     if (get_attribute(env, 'aDAPT.Rx')==2) rr = inputs$clopidogrel$vRR.ExtBleed.Ticagrelor 
     if (get_attribute(env, 'aDAPT.Rx')==3) rr = inputs$clopidogrel$vRR.ExtBleed.Prasugrel
@@ -586,7 +584,7 @@ time_to_IntBleed = function( inputs)
   if (get_attribute(env, "aOnDAPT")!=1) return(inputs$vHorizon*365+1) else
   {
     # Relative Risk
-    rr = get_attribute(env, "aRR.DAPT.IntBleed")
+    rr = 1
     if (get_attribute(env, 'aDAPT.Rx')==2) rr = inputs$clopidogrel$vRR.IntBleed.Ticagrelor 
     if (get_attribute(env, 'aDAPT.Rx')==3) rr = inputs$clopidogrel$vRR.IntBleed.Prasugrel
     if (get_attribute(env, 'aDAPT.Rx')==4) rr = inputs$clopidogrel$vRR.IntBleed.Aspirin
@@ -630,7 +628,7 @@ time_to_TIMIMinor = function( inputs)
   if (get_attribute(env, "aOnDAPT")!=1) return(inputs$vHorizon*365+1) else
   {
     # Relative Risk
-    rr = get_attribute(env, "aRR.DAPT.TIMIMinor")
+    rr = 1
     if (get_attribute(env, 'aDAPT.Rx')==2) rr = inputs$clopidogrel$vRR.TIMIMinor.Ticagrelor 
     if (get_attribute(env, 'aDAPT.Rx')==3) rr = inputs$clopidogrel$vRR.TIMIMinor.Prasugrel
     if (get_attribute(env, 'aDAPT.Rx')==4) rr = inputs$clopidogrel$vRR.TIMIMinor.Aspirin
@@ -675,7 +673,7 @@ time_to_FatalBleed = function( inputs)
   if (get_attribute(env, "aOnDAPT")!=1) return(inputs$vHorizon*365+1) else
   {
     # Relative Risk
-    rr = get_attribute(env, "aRR.DAPT.FatalBleed")
+    rr = 1
     if (get_attribute(env, 'aDAPT.Rx')==2) rr = inputs$clopidogrel$vRR.FatalBleed.Ticagrelor 
     if (get_attribute(env, 'aDAPT.Rx')==3) rr = inputs$clopidogrel$vRR.FatalBleed.Prasugrel
     if (get_attribute(env, 'aDAPT.Rx')==4) rr = inputs$clopidogrel$vRR.FatalBleed.Aspirin

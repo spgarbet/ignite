@@ -82,5 +82,7 @@ cost.qaly <- function(arrivals,inputs)
   COST = arrivals %>% filter(discounted_cost>0) %>% group_by(name) %>% dplyr::summarise(dCOST = sum(discounted_cost))
   out <- QALY %>% left_join(COST,by="name") 
   
+  return(out)
+  
   c(dQALY=mean(out$dQALY), dCost=mean(out$dCOST))
 }

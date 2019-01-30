@@ -6,13 +6,6 @@ assign_initial_clopidogrel_attributes <- function(traj,inputs)
     set_attribute("aAspirin",2) %>%
     set_attribute("aOnDAPT",2) %>%
     set_attribute("aGenotyped_CYP2C19",2) %>%
-    set_attribute("aRR.DAPT.ST",1) %>%
-    set_attribute("aRR.DAPT.MI",1) %>%
-    set_attribute("aRR.DAPT.RV",1) %>%
-    set_attribute("aRR.DAPT.ExtBleed",1) %>%
-    set_attribute("aRR.DAPT.IntBleed",1) %>%
-    set_attribute("aRR.DAPT.TIMIMinor",1) %>%
-    set_attribute("aRR.DAPT.FatalBleed",1) %>% 
     set_attribute("aDAPT.Rx",5) %>%
     set_attribute("sCABG", 2) %>% #switch for cabg-related bleed
     set_attribute("aSwitch30d", 2) #switch at 30d

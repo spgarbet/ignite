@@ -11,4 +11,8 @@ library(parallel)
 #   sapply(1:n, function(y) simulation(x, y))
 # })
 
-ignite(inputs, 1)
+
+x <- 1
+results <- ignite(inputs, x)
+results <- matrix(results, nrow=1, dimnames=list(x,names(results)))
+save(results, file="output/run-1.Rdata")

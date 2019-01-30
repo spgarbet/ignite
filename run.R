@@ -5,7 +5,8 @@ pkg <- c("simmer",
          "tidyr",
          "reshape2",
          "ggplot2",
-         "msm")
+         "msm",
+         "quantmod")
 invisible(sapply(pkg, require, character.only=TRUE))
 
 source("model.R")
@@ -13,10 +14,11 @@ source("costs.R")
 
 progress   <- function(...) cat(date(), ' ', paste0(...), '\n')
 
-env  <- simmer("IGNITE-v1.2")
+env  <- simmer("IGNITE-v1.2") # Global simmer envirnoment
 
 exec.simulation <- function(inputs)
 {
+  env  <<- NULL
   env  <<- simmer("IGNITE-v1.2")
   traj <- simulation(env, inputs)
   env %>% create_counters(counters)
@@ -39,21 +41,21 @@ set.strategy <- function(inputs, strategy)
     inputs$vReactive                          <- "None"
     inputs$vSwitch                            <- "None"
     inputs$clopidogrel$vDAPT.Start            <- "Clopidogrel"
-    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0
+    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0.62
   } else if(strategy==1)
   {
     inputs$vPreemptive                        <- "None"
     inputs$vReactive                          <- "None"
     inputs$vSwitch                            <- "None"
     inputs$clopidogrel$vDAPT.Start            <- "Ticagrelor"
-    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0
+    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0.62
   } else if(strategy==2)
   {
     inputs$vPreemptive                        <- "None"
     inputs$vReactive                          <- "None"
     inputs$vSwitch                            <- "All"
     inputs$clopidogrel$vDAPT.Start            <- "Ticagrelor"
-    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0
+    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0.62
   } else if(strategy==3)
   {
     inputs$vPreemptive                        <- "None"
@@ -73,19 +75,18 @@ set.strategy <- function(inputs, strategy)
   inputs
 }
 
-chunksize <- 100 #000
 
 run.model <- function(inputs, strategy, seed)
 {
   inputs    <- set.strategy(inputs, strategy)
-  chunksize <- if(chunksize > inputs$vN) inputs$vN else chunksize
+  chunksize <- if(inputs$chunksize > inputs$vN) inputs$vN else inputs$chunksize
   
   # Run in chucks as needed
   runs      <- ceiling(inputs$vN / chunksize)
   inputs$vN <- chunksize
   result <- sapply(1:runs, function(n) {
     progress("Strategy ", strategy, ", chunk ", n)
-    set.seed(seed+runs*20000)
+    set.seed(seed+n*100000)
     cost.qaly(data.table(exec.simulation(inputs)), inputs)
   })
   rowSums(result)/runs
