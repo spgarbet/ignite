@@ -15,10 +15,8 @@ discount_value <- function(value,ar=annual_discount_rate,A,B)
 
 discount = function(value,ar=annual_discount_rate,A) value / (1+ar)^(A/365.25)
 
-cost.qaly <- function(raw,inputs) 
+cost.qaly <- function(arrivals,inputs) 
 {
-  arrivals <- raw #%>%  mutate(name = paste0(name,"_",replication))
-
   # Make all resources a factor (this allows for null events to still get summaries)
   arrivals$resource <- factor(arrivals$resource, counters)
   

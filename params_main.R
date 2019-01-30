@@ -1,19 +1,22 @@
 ####
 ## 
-# Define Simluation Inputs
+# Define Simulation Inputs
 ##
 ####
 
 # Function to Convert Nominal to Real Dollars
 # Get CPI-U from FRED
-library(quantmod)
+#library(quantmod)
 #getSymbols("CPIAUCSL", src='FRED')
-load("CPIAUCSL.Rdata")
+#avg.cpi <- apply.yearly(CPIAUCSL, mean) 
+#save(avg.cpi, file="main/cpi.Rdata")
+#library(quantmod)
+#load("CPIAUCSL.Rdata")
+#avg.cpi <- apply.yearly(CPIAUCSL, mean) 
+#save(avg.cpi, file="main/cpi.Rdata")
+load("main/cpi.Rdata")
 
-avg.cpi <- apply.yearly(CPIAUCSL, mean) 
-#save(avg.cpi,file="./main/cpi.Rdata")
-
-realdol = function(nominal,year,base=2017)
+realdol = function(nominal, year, base=2017)
 {
   cf <- avg.cpi/as.numeric(avg.cpi[paste(base)])
   return(as.numeric(nominal*cf[paste(year)]))
@@ -168,12 +171,6 @@ inputs <- list(
   vReactive    = "None", # Can be one of following: "None", "Single", "Panel"
   vSwitch      = "None", # Can be one of following: "None", "All","Genotype"; trigger 30-day drug switch event
 
-# Control Which Drugs Are Run in the Model 
-  vDrugs       = list(vClopidogrel = TRUE),
-
-# CURRENTLY PANEL IS FOR ALL DRUGS ???
-  vPanel       = list(vClopidogrel = TRUE),
-
   # Drug specific model parameters
   clopidogrel = clopidogrel,
   
@@ -207,11 +204,11 @@ inputs <- list(
     bleed_ext_maj_nonfatal = 14,
     bleed_min_nonfatal     =  2,
     revasc_cabg            = 14,
-    revasc_pci      = 7,
-    cabg_bleed      = 7,
-    MajorBleed_GI	= 14,
-    MajorBleed_Other =	14,
-    MinorBleed = 2
+    revasc_pci             =  7,
+    cabg_bleed             =  7,
+    MajorBleed_GI	         = 14,
+    MajorBleed_Other       = 14,
+    MinorBleed             = 2
   ),
   disutilities = list(
     bleed_ext_maj_nonfatal = 0.2,
@@ -249,6 +246,3 @@ inputs <- list(
     secular_death          = 0
   )   
 )
-
-
-

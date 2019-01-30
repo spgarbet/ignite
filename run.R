@@ -5,8 +5,7 @@ pkg <- c("simmer",
          "tidyr",
          "reshape2",
          "ggplot2",
-         "msm",
-         "quantmod")
+         "msm")
 invisible(sapply(pkg, require, character.only=TRUE))
 
 source("model.R")
@@ -33,7 +32,6 @@ exec.simulation <- function(inputs)
 set.strategy <- function(inputs, strategy)
 {
   inputs$vPreemptive <- "None"
-  inputs$vDrugs      <- list(vClopidogrel = T)
   inputs$clopidogrel$vRRRepeat.DAPT <- 0
   
   if(strategy==0) 
@@ -56,7 +54,7 @@ set.strategy <- function(inputs, strategy)
     inputs$vSwitch                            <- "All"
     inputs$clopidogrel$vDAPT.Start            <- "Ticagrelor"
     inputs$clopidogrel$vProbabilityDAPTSwitch <- 0
-  } else if(Istrategy==3)
+  } else if(strategy==3)
   {
     inputs$vPreemptive                        <- "None"
     inputs$vReactive                          <- "Single"
@@ -75,17 +73,14 @@ set.strategy <- function(inputs, strategy)
   inputs
 }
 
-
-
-inputs$vN <- 2000000
-
-chunksize <- 100000
+chunksize <- 100 #000
 
 run.model <- function(inputs, strategy, seed)
 {
-  inputs <- set.strategy(inputs, strategy)
+  inputs    <- set.strategy(inputs, strategy)
+  chunksize <- if(chunksize > inputs$vN) inputs$vN else chunksize
   
-  # Run in chucks
+  # Run in chucks as needed
   runs      <- ceiling(inputs$vN / chunksize)
   inputs$vN <- chunksize
   result <- sapply(1:runs, function(n) {
@@ -103,4 +98,3 @@ ignite <- function(inputs, seed, strategies=c(0, 2, 3))
   result 
 }
 
-ignite(inputs, 1)
