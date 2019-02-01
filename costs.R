@@ -79,9 +79,7 @@ cost.qaly <- function(arrivals,inputs)
   
   QALY = qaly.i %>% group_by(name) %>% dplyr::summarise(dQALY = sum(qaly.d)/365.25)
   COST = arrivals %>% filter(discounted_cost>0) %>% group_by(name) %>% dplyr::summarise(dCOST = sum(discounted_cost))
-  out <- QALY %>% left_join(COST,by="name") 
-
-  #return(out) DEBUG help
+  out <- QALY %>% left_join(COST,by="name") %>% replace_na(list(dQALY=0,dCOST=0))
   
   c(dQALY=mean(out$dQALY), dCost=mean(out$dCOST))
 }
