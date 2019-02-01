@@ -45,7 +45,7 @@ clopidogrel = list(
    
   vDAPT.Tx.Duration         = 365, # (12mo-48mo)
   
-  vProbabilityDAPTSwitch    = 0.62, #IGNITE input - Jan
+  vProbabilityDAPTSwitch    = 1, #IGNITE input - Jan
   
   # Stent Thrombosis: Event Rates and Relative Risks
   # The Stent Thrombosis Risks are drawn from a piecewise exponential with the following
@@ -127,7 +127,7 @@ clopidogrel = list(
   
   # Revascularization
   vRiskRV365                = 0.10,   # (0.05-0.15)
-  vRiskRVgt365              = 0.03,   # (0.02-0.04)
+  vRiskRVgt365              = 0.03,   # (0.02-0.04) NOT USED FOR IGNITE
   vPrCABG.RV                = 0.25,   # (15-35)
   
   # Bleeding
@@ -163,8 +163,8 @@ clopidogrel = list(
 
 inputs <- list(
   # Population Parameters
-  vN           = 2000,     # Patients to simulate
-  chunksize    = 100,      # Chunk runs into this size
+  vN           = 200000,     # Patients to simulate
+  chunksize    = 20000,      # Chunk runs into this size
   vHorizon     = 1,      # Length of simulation upon a patient entering (1 year)
 
   # Strategies

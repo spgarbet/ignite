@@ -35,41 +35,33 @@ set.strategy <- function(inputs, strategy)
 {
   inputs$vPreemptive <- "None"
   inputs$clopidogrel$vRRRepeat.DAPT <- 0
+  inputs$clopidogrel$vProbabilityDAPTSwitch <- 1
   
   if(strategy==0) 
   {
     inputs$vReactive                          <- "None"
     inputs$vSwitch                            <- "None"
     inputs$clopidogrel$vDAPT.Start            <- "Clopidogrel"
-    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0.62
   } else if(strategy==1)
   {
-    inputs$vPreemptive                        <- "None"
     inputs$vReactive                          <- "None"
     inputs$vSwitch                            <- "None"
     inputs$clopidogrel$vDAPT.Start            <- "Ticagrelor"
-    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0.62
   } else if(strategy==2)
   {
-    inputs$vPreemptive                        <- "None"
     inputs$vReactive                          <- "None"
     inputs$vSwitch                            <- "All"
     inputs$clopidogrel$vDAPT.Start            <- "Ticagrelor"
-    inputs$clopidogrel$vProbabilityDAPTSwitch <- 0.62
   } else if(strategy==3)
   {
-    inputs$vPreemptive                        <- "None"
     inputs$vReactive                          <- "Single"
     inputs$vSwitch                            <- "None"
     inputs$clopidogrel$vDAPT.Start            <- "Clopidogrel"
-    inputs$clopidogrel$vProbabilityDAPTSwitch <- 1
   } else
   {    
-    inputs$vPreemptive                        <- "None"
     inputs$vReactive                          <- "None"
     inputs$vSwitch                            <- "Genotype"
     inputs$clopidogrel$vDAPT.Start            <- "Ticagrelor"
-    inputs$clopidogrel$vProbabilityDAPTSwitch <- 1
   }
   
   inputs
@@ -87,7 +79,7 @@ run.model <- function(inputs, strategy, seed)
   result <- sapply(1:runs, function(n) {
     progress("Strategy ", strategy, ", chunk ", n)
     set.seed(seed+n*100000)
-    cost.qaly(data.table(exec.simulation(inputs)), inputs)
+    cost.qaly(exec.simulation(inputs), inputs)
   })
   rowSums(result)/runs
 }
