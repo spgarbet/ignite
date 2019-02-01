@@ -163,8 +163,8 @@ clopidogrel = list(
 
 inputs <- list(
   # Population Parameters
-  vN           = 200000,     # Patients to simulate
-  chunksize    = 20000,      # Chunk runs into this size
+  vN           = 2000000,     # Patients to simulate
+  chunksize    = 50000,       # Chunk runs into this size
   vHorizon     = 1,      # Length of simulation upon a patient entering (1 year)
 
   # Strategies
