@@ -76,18 +76,19 @@ run.model <- function(inputs, strategy, seed)
   # Run in chucks as needed
   runs      <- ceiling(inputs$vN / chunksize)
   inputs$vN <- chunksize
-  result <- sapply(1:runs, function(n) {
+  result <- mclapply(1:runs, mc.cores=3, function(n) {
     progress("Strategy ", strategy, ", chunk ", n)
     set.seed(seed+n*100000)
     cost.qaly(exec.simulation(inputs), inputs)
   })
-  rowSums(result)/runs
+  result <- matrix(unlist(result), ncol=2, byrow=TRUE)
+  colSums(result)/runs
 }
 
 ignite <- function(inputs, seed, strategies=c(0, 2, 3))
 {
-  #result <- unlist(lapply(strategies, function(x) run.model(inputs, x, seed)))
-  result <- unlist(mclapply(strategies, function(x) run.model(inputs, x, seed), mc.cores=4))
+  result <- unlist(lapply(strategies, function(x) run.model(inputs, x, seed)))
+  #result <- unlist(mclapply(strategies, function(x) run.model(inputs, x, seed), mc.cores=4))
   names(result) <- paste0(c("dQALY", "dCOST"), rep(strategies, each=2))
   result 
 }
