@@ -4,7 +4,7 @@ pkg <- c("simmer",
          "dplyr",
          "tidyr",
          "reshape2",
-         "ggplot2",
+         "parallel",
          "msm",
          "quantmod")
 invisible(sapply(pkg, require, character.only=TRUE))
@@ -86,7 +86,8 @@ run.model <- function(inputs, strategy, seed)
 
 ignite <- function(inputs, seed, strategies=c(0, 2, 3))
 {
-  result <- unlist(lapply(strategies, function(x) run.model(inputs, x, seed)))
+  #result <- unlist(lapply(strategies, function(x) run.model(inputs, x, seed)))
+  result <- unlist(mclapply(strategies, function(x) run.model(inputs, x, seed), mc.cores=4))
   names(result) <- paste0(c("dQALY", "dCOST"), rep(strategies, each=2))
   result 
 }
