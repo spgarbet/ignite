@@ -1,0 +1,188 @@
+---
+title: "Saltelli PSA"
+author: "Shawn Garbett"
+date: "February 18, 2019"
+output:
+  pdf_document: default
+  html_document: default
+header-includes:
+- \usepackage[LGR,T1]{fontenc}
+- \usepackage[utf8]{inputenc}
+- \usepackage{textgreek}
+- \usepackage{float}
+- \usepackage[x11names,dvipsnames,table]{xcolor}
+- \usepackage{boldline}
+- \usepackage{multirow}
+- \usepackage{colortbl}
+- \usepackage{hhline}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tangram)
+source("load_results.R")
+```
+
+```{r}
+results$nmb50s2 <- 50000*(results$dQALY2 - results$dQALY0) - (results$dCOST2 - results$dCOST0)
+results$nmb50s3 <- 50000*(results$dQALY3 - results$dQALY0) - (results$dCOST3 - results$dCOST0)
+results$nmb50k  <- pmax(results$nmb50s2, results$nmb50s3)
+  
+results$nmb100s2 <- 100000*(results$dQALY2 - results$dQALY0) - (results$dCOST2 - results$dCOST0)
+results$nmb100s3 <- 100000*(results$dQALY3 - results$dQALY0) - (results$dCOST3 - results$dCOST0)
+results$nmb100k  <- pmax(results$nmb100s2, results$nmb100s3)
+
+write.table(results$nmb50s2,  file="output/nmb50s2.csv",  row.names=FALSE, col.names=FALSE)
+write.table(results$nmb50s3,  file="output/nmb50s3.csv",  row.names=FALSE, col.names=FALSE)
+write.table(results$nmb100s2, file="output/nmb100s2.csv", row.names=FALSE, col.names=FALSE)
+write.table(results$nmb100s3, file="output/nmb100s3.csv", row.names=FALSE, col.names=FALSE)
+write.table(results$nmb50k,   file="output/nmb50k.csv",   row.names=FALSE, col.names=FALSE)
+write.table(results$nmb100k,  file="output/nmb100k.csv",  row.names=FALSE, col.names=FALSE)
+
+```
+
+# PSA
+
+This report documents the results of using Saltelli's method of probability sensitivity analysis on the IGNITE model. 
+
+The method chosen uses a low discrepency sequence sample of the defined space and explores permuatations of the samples in a methodical manner in such a way to maximize information returned about the probability sensitivity of the model. For this analysis we chose an N=100 values in that the primary sample is 100 points from a Halton sequence that draws 2 uncorrelated positions as defined by the parameter space. In this instance the parameter space has 48 variables. Thus for each of the 100 draws it draws from a 96 dimensional space. The secondary 48 is shuffled to destroy any residual correlation from the Halton draw. Then each parameter is permuted across tjese pairs in the space. This results in 9800 defined models runs.
+
+For each run, we evaluate 3 scenarios for cost and quality. These are the 0, 2, and 3 scenarios of the ignite project.
+
+## Scenarios
+
+* Scenario 0. Single drug start on Clopidogrel no testing.
+* Scenario 2. Start on Tricagrelor, switch all to Clopidogrel at 30 days.
+* Scenario 3. Genotype and switch based on test.
+
+## Ranges
+
+```{r, results="asis", echo=FALSE}
+ranges <- read.csv("psa-ranges.csv")
+ranges$Low <- render_f(ranges$Low, 4)
+ranges$High <- render_f(ranges$High, 4)
+tangram(ranges, as.character=TRUE, style="nejm")
+
+params <- read.csv("sample.txt", header=FALSE)
+colnames(params) <- ranges$Variable
+```
+## Raw Results
+
+Given that the sample space is carefully designed and has a very specific structure to maximize information returned to the PSA, the raw data is not particularly useful. It's included here as an exploratory measure to show that runs did have variance and show how their structures varied.
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+
+myplot <- function(x, y, label)
+   plot(results[,x], results[,y],
+         pch=16,
+         xlab="dQALY", ylab="dCOST",
+         main=label,
+         cex=0.5, col=rgb(0,0,0,0.5)
+         #,xlim=c(0.3, 0.96),
+         #,ylim=c(7500, 70000)
+        )
+
+myplot(1, 2, "Scenario 0")
+myplot(3, 4, "Scenario 2")
+myplot(5, 6, "Scenario 3")
+hist(results$nmb100k, main="Net Monetary Benefit", sub="WTP=$100k", xlab="Dollars ($)", freq=FALSE)
+```
+
+```{r}
+
+library(scales)
+library(ggplot2)
+TornadoOpt <-function(Parms,Outcomes,   txtsize=6, opt=NULL, title="Tornado Diagram"){
+  # Grouped Bar Plot
+  # Determine the overall optimal strategy
+  if(is.null(opt)) opt<-which.max(colMeans(Outcomes))
+  # calculate min and max vectors of the parameters (e.g., lower 2.5% and 97.5%)
+  X <- as.matrix(Parms)
+  y <- as.matrix(Outcomes[,opt])
+  ymean <- mean(y)
+  n <- nrow(Parms)
+  nParams <- ncol(Parms)
+  #paramNames <- Names[seq(8,7+nParams)]
+  paramNames <- colnames(Parms)
+  Parms.sorted <- apply(Parms,2,sort,decreasing=F)#Sort in increasing order each column of Parms
+  lb <- 2.5
+  ub <- 97.5 
+  Xmean <- rep(1,nParams) %*% t(colMeans(X))
+  XMin <- Xmean
+  XMax <- Xmean
+  paramMin <- as.vector(Parms.sorted[round(lb*n/100),])
+  paramMax <- as.vector(Parms.sorted[round(ub*n/100),])
+  paramNames2 <- paste(paramNames, "[", round(paramMin,2), ",", round(paramMax,2), "]")
+  
+  diag(XMin) <- paramMin
+  diag(XMax) <- paramMax
+  
+  XMin <- cbind(1, XMin)
+  XMax <- cbind(1, XMax)
+  
+  X <- cbind(1,X)
+  B <- solve(t(X) %*% X) %*% t(X) %*% y
+  yMin <- XMin %*% B - ymean
+  yMax <- XMax %*% B - ymean
+  ySize <- abs(yMax - yMin) 
+  
+  rankY<- order(ySize)
+  xmin <- min(c(yMin, yMax)) + ymean
+  xmax <- max(c(yMin, yMax)) + ymean
+  
+  Tor <- data.frame(
+    Parameter=c(paramNames2[rankY],paramNames2[rankY]),  
+    Level=c(rep("Low",nParams),rep("High",nParams)),
+    value=ymean+c(yMin[rankY],yMax[rankY]),
+    sort=seq(1,nParams)
+  )
+  #re-order the levels in the order of appearance in the data.frame
+  Tor$Parameter2 <- factor(Tor$Parameter, unique(as.character(Tor$Parameter)))
+  #Define offset as a new axis transformation. Source: http://blog.ggplot2.org/post/25938265813/defining-a-new-transformation-for-ggplot2-scales  
+  offset_trans <- function(offset=0) {
+    trans_new(paste0("offset-", format(offset)), function(x) x-offset, function(x) x+offset)
+  }
+  #Plot the Tornado diagram.
+  ggplot(Tor[Tor$Level=="Low",], aes(x=Parameter2,y=value, fill=Level)) +
+    geom_bar(stat="identity") +
+    ggtitle(title)+
+    scale_fill_discrete("Parameter Level: ", l=50)+
+    scale_y_continuous(name="Net Benefit",trans=offset_trans(offset=ymean)) +
+    scale_x_discrete(name="Parameter") +
+    geom_bar(data=Tor[Tor$Level=="High",], aes(x=Parameter2,y=value, fill=Level), stat="identity") +
+    geom_hline(yintercept = ymean, linetype = "dotted", size=0.5) +
+    theme_bw()+
+    theme(legend.position="bottom",legend.title=element_text(size = txtsize,angle = 0, hjust = 1),
+          legend.key = element_rect(colour = "black"),
+          legend.text = element_text(size = txtsize),
+          title = element_text(face="bold", size=15),
+          axis.title.x = element_text(face="bold", size=txtsize),
+          axis.title.y = element_text(face="bold", size=txtsize),
+          axis.text.y = element_text(size=txtsize),
+          axis.text.x = element_text(size=txtsize),
+          axis.ticks.y = element_blank())+
+    coord_flip()  
+}
+TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s2, results$nmb100s3)), opt=1, title="Sensitivity Scenario 2")
+TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s2, results$nmb100s3)), opt=2, title="Sensitivity Scenario 3")
+```
+
+## Issues
+
+* The Satelli analysis code does not run correctly. The problem of "bit rot" of code has set in and something in the python language has changed. To do Satelli's version of PSA will require some effort in getting the library of code current. However, John Graves' code worked fine for the above.
+* Scenario 3 has outliers that are puzzling and need further investigation. There are cases where the mean quality is around 0.3 which means that most of the simulation died or had very serious issues. 
+* The existing code for the PSA runs was greatly simplified from the code ran for the paper. Scenario 0 and 2 were carefully compared and audited to match between the runs. When they didn't an error was found in the more recent simplified version. It is likely that the issue with Scenario 3 is due to an error code simplification again.
+
+### Puzzling Parameter Example
+
+The first set of parameters that display the puzzling behavior for QALY are shown in the following table.
+
+```{r}
+
+puzzle <- t(params[which(results$dQALY3 < 0.3)[1],])
+puzzle <- data.frame(Parameter=rownames(puzzle), Value=render_f(unname(puzzle[,1]), 3))
+tangram(puzzle, as.character=TRUE, style="nejm", caption="Puzzling Parameter Example")
+```
+
+Next a full run at these settings to investigate what underlies the issue will be performed.
