@@ -3,8 +3,8 @@ title: "Saltelli PSA"
 author: "Shawn Garbett"
 date: "February 18, 2019"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 header-includes:
 - \usepackage[LGR,T1]{fontenc}
 - \usepackage[utf8]{inputenc}
@@ -20,7 +20,9 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tangram)
-source("load_results.R")
+#source("load_results.R")
+load("results-20190219.Rdata")
+results <- results[order(results$run),]
 ```
 
 ```{r}
@@ -57,7 +59,7 @@ For each run, we evaluate 3 scenarios for cost and quality. These are the 0, 2, 
 
 ## Ranges
 
-```{r, results="asis", echo=FALSE}
+```{r ranges, results="asis", echo=FALSE}
 ranges <- read.csv("psa-ranges.csv")
 ranges$Low <- render_f(ranges$Low, 4)
 ranges$High <- render_f(ranges$High, 4)
@@ -180,7 +182,7 @@ The first set of parameters that display the puzzling behavior for QALY are show
 
 ```{r}
 
-puzzle <- t(params[which(results$dQALY3 < 0.3)[1],])
+puzzle <- t(params[unlist(results$run[which(results$dQALY3 < 0.3)])[1],])
 puzzle <- data.frame(Parameter=rownames(puzzle), Value=render_f(unname(puzzle[,1]), 3))
 tangram(puzzle, as.character=TRUE, style="nejm", caption="Puzzling Parameter Example")
 ```
