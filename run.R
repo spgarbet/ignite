@@ -135,8 +135,8 @@ sample.point <- function(inputs, row)
   inputs$clopidogrel$vRR.RiskCABGTIMImajor.Ticagrelor <- sample[44]
   inputs$clopidogrel$vRR.Bleed.LOF                    <- sample[45]
   inputs$costs$single_test                            <- sample[46]
-  inputs$costs$clopidogrel                            <- sample[47]
-  inputs$costs$ticagrelor                             <- sample[48]
+  inputs$costs$clopidogrel                            <- sample[47] / 30
+  inputs$costs$ticagrelor                             <- sample[48] / 30
   
   inputs
 }
