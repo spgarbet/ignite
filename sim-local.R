@@ -5,14 +5,11 @@ source("run.R")
 ## For exection on local desktop
 library(parallel)
  
-# mclapply(1:24, mc.cores=8, function(x)
-# {
-#   set.seed(x)
-#   sapply(1:n, function(y) simulation(x, y))
-# })
+#for(x in 1:100)
+#{
+x <- 8184
+  results <- ignite(inputs, x)
+  #results <- matrix(results, nrow=1, dimnames=list(x,names(results)))
+  save(results, file=paste0("output/run-",x,".Rdata"))
+#}
 
-
-x <- 1
-results <- ignite(inputs, x)
-results <- matrix(results, nrow=1, dimnames=list(x,names(results)))
-save(results, file="output/run-1.Rdata")

@@ -1,5 +1,7 @@
 library(stringr)
 
+target <- "output/20190301"
+
 # Helper function for repeated operation over files.
 load.results <- function(target="output", verbose=FALSE)
 {
@@ -13,6 +15,7 @@ load.results <- function(target="output", verbose=FALSE)
     results
   }))
 }
-results <- data.frame(load.results(verbose=TRUE, target="output/20190219"))
-results$run <- as.numeric(gsub(".*run-?([0-9]+)\\.Rdata", "\\1", dir("output/20190219"), perl=TRUE))
-
+results <- data.frame(load.results(verbose=TRUE, target=target))
+results$run <- as.numeric(gsub(".*run-?([0-9]+)\\.Rdata", "\\1", dir(target), perl=TRUE))
+save(results, file=paste0("results-",substr(target, 8, 15),".Rdata"))
+rm(target)

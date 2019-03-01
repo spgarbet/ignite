@@ -76,9 +76,9 @@ run.model <- function(inputs, strategy, seed)
   # Run in chucks as needed
   runs      <- ceiling(inputs$vN / chunksize)
   inputs$vN <- chunksize
-  result <- mclapply(1:runs, mc.cores=3, function(n) {
+  result <- mclapply(1:runs, mc.cores=8, function(n) {
     progress("Strategy ", strategy, ", chunk ", n)
-    set.seed(seed+n*100000)
+    set.seed(seed+n*110000)
     cost.qaly(exec.simulation(inputs), inputs)
   })
   result <- matrix(unlist(result), ncol=2, byrow=TRUE)

@@ -1,10 +1,10 @@
 ---
 title: "Saltelli PSA"
 author: "Shawn Garbett"
-date: "February 18, 2019"
+date: "February 25, 2019"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 header-includes:
 - \usepackage[LGR,T1]{fontenc}
 - \usepackage[utf8]{inputenc}
@@ -15,13 +15,15 @@ header-includes:
 - \usepackage{multirow}
 - \usepackage{colortbl}
 - \usepackage{hhline}
+- \usepackage{caption}
+- \captionsetup[table]{labelformat=empty,textformat=empty}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(tangram)
-#source("load_results.R")
-load("results-20190219.Rdata")
+
+load("results-20190225.Rdata") #creation: load_results.R
 results <- results[order(results$run),]
 
 ```
@@ -48,7 +50,7 @@ results$nmb100k  <- pmax(results$nmb100s2, results$nmb100s3)
 
 This report documents the results of using Saltelli's method of probability sensitivity analysis on the IGNITE model. 
 
-The method chosen uses a low discrepency sequence sample of the defined space and explores permuatations of the samples in a methodical manner in such a way to maximize information returned about the probability sensitivity of the model. For this analysis we chose an N=100 values in that the primary sample is 100 points from a Halton sequence that draws 2 uncorrelated positions as defined by the parameter space. In this instance the parameter space has 48 variables. Thus for each of the 100 draws it draws from a 96 dimensional space. The secondary 48 is shuffled to destroy any residual correlation from the Halton draw. Then each parameter is permuted across tjese pairs in the space. This results in 9800 defined models runs.
+The method chosen uses a low discrepency sequence sample of the defined space and explores permuatations of the samples in a methodical manner in such a way to maximize information returned about the probability sensitivity of the model. For this analysis we chose an N=100 values in that the primary sample is 100 points from a Halton sequence that draws 2 uncorrelated positions as defined by the parameter space. In this instance the parameter space has 48 variables. Thus for each of the 100 draws it draws from a 96 dimensional space. The secondary 48 is shuffled to destroy any residual correlation from the Halton draw. Then each parameter is permuted across these pairs in the space. This results in 9800 defined models runs.
 
 For each run, we evaluate 3 scenarios for cost and quality. These are the 0, 2, and 3 scenarios of the ignite project.
 
@@ -62,9 +64,16 @@ For each run, we evaluate 3 scenarios for cost and quality. These are the 0, 2, 
 
 ```{r ranges, results="asis", echo=FALSE}
 ranges <- read.csv("psa-ranges.csv")
+ranges$Variable <- as.character(ranges$Variable)
+ranges[46,"Variable"] <- "costs.test"
 ranges$Low <- render_f(ranges$Low, 4)
 ranges$High <- render_f(ranges$High, 4)
-tangram(ranges, as.character=TRUE, style="nejm")
+tangram(ranges,
+        as.character=TRUE,
+        style="nejm",
+        id="ranges",
+        caption="Parameter Ranges for PSA",
+        pct_width=0.8)
 
 params <- read.csv("sample.txt", header=FALSE)
 colnames(params) <- ranges$Variable
@@ -85,9 +94,9 @@ myplot <- function(x, y, label)
          pch=16,
          xlab="dQALY", ylab="dCOST",
          main=label,
-         cex=0.5, col=rgb(0,0,0,0.5)
-         #,xlim=c(0.3, 0.96),
-         #,ylim=c(7500, 70000)
+         cex=0.5, col=rgb(0,0,0,0.2)
+         ,xlim=c(0.89, 0.96)
+         ,ylim=c(5000, 10000)
         )
 
 myplot(1, 2, "Scenario 0")
@@ -95,6 +104,10 @@ myplot(3, 4, "Scenario 2")
 myplot(5, 6, "Scenario 3")
 hist(results$nmb100k, main="Net Monetary Benefit", sub="WTP=$100k", xlab="Dollars ($)", freq=FALSE)
 ```
+
+# Tornado Plots
+
+These are made with the standard linear regression across factors.
 
 ```{r}
 
@@ -171,12 +184,73 @@ TornadoOpt <-function(Parms,Outcomes,   txtsize=6, opt=NULL, title="Tornado Diag
           axis.ticks.y = element_blank())+
     coord_flip()  
 }
-TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s2, results$nmb100s3)), opt=1, title="Sensitivity Scenario 2")
-TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s2, results$nmb100s3)), opt=2, title="Sensitivity Scenario 3")
+TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s2, results$nmb100s3)), opt=1, title="Sensitivity Scenario 2 WIP 100k")
+TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s2, results$nmb100s3)), opt=2, title="Sensitivity Scenario 3 WIP 100k")
 ```
 
-## Issues
+## Percent of Runs Greater than Zero
 
-* The Satelli analysis code does not run correctly. The problem of "bit rot" of code has set in and something in the python language has changed. To do Satelli's version of PSA will require some effort in getting the library of code current. However, John Graves' code worked fine for the above.
-* Scenario 3 has outliers that are puzzling and need further investigation. There are cases where the mean quality is around 0.3 which means that most of the simulation died or had very serious issues. 
-* The existing code for the PSA runs was greatly simplified from the code ran for the paper. Scenario 0 and 2 were carefully compared and audited to match between the runs. When they didn't an error was found in the more recent simplified version. It is likely that the issue with Scenario 3 is due to an error code simplification again.
+```{r}
+percent <- function(name) paste0(round(100*sum(results[,name]>0)/length(results[,name]), 2), "%")
+```
+
+* `r percent("nmb100s2")` of scenario 2 net monetary benefits are greater than zero at a williness to pay threshold of $100k.
+* `r percent("nmb100s3")` of scenario 3 net monetary benefits are greater than zero at a williness to pay threshold of $100k.
+* `r percent("nmb50s2")` of scenario 2 net monetary benefits are greater than zero at a williness to pay threshold of $50k.
+* `r percent("nmb50s3")` of scenario 3 net monetary benefits are greater than zero at a williness to pay threshold of $50k.
+
+## Saltelli Method Results 100k WTP Scenario 2
+
+```{r, results='asis'}
+single <- read.csv("saltelli-single-2.txt", header=FALSE)
+total  <- read.csv("saltelli-total-2.txt",  header=FALSE)
+
+saltelli <- data.frame(Variable = ranges$Variable,
+                       Single   = unname(single),
+                       Total    = unname(total))
+
+tangram(saltelli[order(saltelli$Single, decreasing=TRUE),c("Variable", "Single")],
+  as.character=TRUE,
+  id="Single 2",
+  caption="Saltelli Ranking for Direct Contribution to Variance",
+  pct_width=0.8,
+  footnote="Scaled to 100%",
+  style="nejm") %>% del_col(1)
+
+
+tangram(saltelli[order(saltelli$Total, decreasing=TRUE),c("Variable", "Total")],
+  as.character=TRUE,
+  id="Total 2",
+  caption="Saltelli Ranking Including All Interactions to Variance",
+  footnote="Total exceeds 100% since variance contribution occurs in multiple terms via interaction",
+  pct_width=0.8,
+  style="nejm") %>% del_col(1)
+```
+
+## Saltelli Method Results 100k WTP Scenario 3
+
+```{r, results='asis'}
+single <- read.csv("saltelli-single-3.txt", header=FALSE)
+total  <- read.csv("saltelli-total-3.txt",  header=FALSE)
+
+saltelli <- data.frame(Variable = ranges$Variable,
+                       Single   = unname(single),
+                       Total    = unname(total))
+
+tangram(saltelli[order(saltelli$Single, decreasing=TRUE),c("Variable", "Single")],
+  as.character=TRUE,
+  id="Single 3",
+  caption="Saltelli Ranking for Direct Contribution to Variance",
+  pct_width=0.8,
+  footnote="Scaled to 100%",
+  style="nejm") %>% del_col(1)
+
+
+tangram(saltelli[order(saltelli$Total, decreasing=TRUE),c("Variable", "Total")],
+  as.character=TRUE,
+  id="Total 3",
+  caption="Saltelli Ranking Including All Interactions to Variance",
+  footnote="Total exceeds 100% since variance contribution occurs in multiple terms via interaction 3",
+  pct_width=0.8,
+  style="nejm") %>% del_col(1)
+```
