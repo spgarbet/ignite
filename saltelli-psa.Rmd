@@ -1,7 +1,7 @@
 ---
-title: "Saltelli PSA"
+title: "Saltelli PSA for IGNITE Model"
 author: "Shawn Garbett"
-date: "March 1, 2019"
+date: "April 3, 2019"
 output:
   pdf_document: default
   html_document: default
@@ -58,21 +58,20 @@ This report documents the results of using Saltelli's method of probability sens
 
 The method chosen uses a low discrepency sequence sample of the defined space and explores permuatations of the samples in a methodical manner in such a way to maximize information returned about the probability sensitivity of the model. For this analysis we chose an N=100 values in that the primary sample is 100 points from a Halton sequence that draws 2 uncorrelated positions as defined by the parameter space. In this instance the parameter space has 48 variables. Thus for each of the 100 draws it draws from a 96 dimensional space. The secondary 48 is shuffled to destroy any residual correlation from the Halton draw. Then each parameter is permuted across these pairs in the space. This results in 9800 defined models runs.
 
-For each run, we evaluate 3 scenarios for cost and quality. These are the 0, 2, and 3 scenarios of the ignite project.
+For each run, we evaluate 3 scenarios for cost and quality. These are the 0, 1, and 3 scenarios of the IGNITE project.
 
 ## Scenarios
 
 * Scenario 0. (Reference) Single drug start on Clopidogrel no testing.
 * Scenario 1. Single drug start on Tricagrelor no testing.
-* Scenario 2. Start on Tricagrelor, switch all to Clopidogrel at 30 days.
 * Scenario 3. Genotype and switch based on test.
 
 ## Ranges
 
 ```{r ranges, results="asis", echo=FALSE}
-ranges <- read.csv("psa-ranges.csv")
+ranges <- read.csv("psa-ranges2.csv")
 ranges$Variable <- as.character(ranges$Variable)
-ranges[46,"Variable"] <- "costs.test"
+#ranges[46,"Variable"] <- "Mont"
 ranges$Low <- render_f(ranges$Low, 4)
 ranges$High <- render_f(ranges$High, 4)
 tangram(ranges,
@@ -108,7 +107,6 @@ myplot <- function(x, y, label)
 
 myplot(1, 2, "Scenario 0")
 myplot(8, 9, "Scenario 1")
-myplot(3, 4, "Scenario 2")
 myplot(5, 6, "Scenario 3")
 #hist(results$nmb100k, main="Net Monetary Benefit", sub="WTP=$100k", xlab="Dollars ($)", freq=FALSE)
 ```
@@ -125,7 +123,8 @@ TornadoOpt <-function(Parms,
                       Outcomes,
                       txtsize=6,
                       opt=NULL,
-                      title="Tornado Diagram")
+                      title="Tornado Diagram",
+                      select=NULL)
 {
   # Grouped Bar Plot
   # Determine the overall optimal strategy
@@ -171,6 +170,8 @@ TornadoOpt <-function(Parms,
     sort=seq(1,nParams)
   )
   
+  if(!is.null(select)) Tor <- subset(Tor, Parameter %in% select)
+  
   #re-order the levels in the order of appearance in the data.frame
   Tor$Parameter2 <- factor(Tor$Parameter, unique(as.character(Tor$Parameter)))
   #Define offset as a new axis transformation. Source: http://blog.ggplot2.org/post/25938265813/defining-a-new-transformation-for-ggplot2-scales  
@@ -181,8 +182,8 @@ TornadoOpt <-function(Parms,
   ggplot(Tor[Tor$Level=="Low",], aes(x=Parameter2,y=value, fill=Level)) +
     geom_bar(stat="identity") +
     ggtitle(title)+
-    scale_fill_discrete("Parameter Level: ", l=50)+
-    scale_y_continuous(name="Net Benefit",trans=offset_trans(offset=ymean)) +
+    scale_fill_discrete("Parameter Limit: ", l=50)+
+    scale_y_continuous(name="Difference Net Monetary Benefit",trans=offset_trans(offset=ymean)) +
     scale_x_discrete(name="Parameter") +
     geom_bar(data=Tor[Tor$Level=="High",], aes(x=Parameter2,y=value, fill=Level), stat="identity") +
     geom_hline(yintercept = ymean, linetype = "dotted", size=0.5) +
@@ -198,23 +199,91 @@ TornadoOpt <-function(Parms,
           axis.ticks.y = element_blank())+
     coord_flip()  
 }
+
+# Have to include an additional result then select using opt. Wish this wasn't the case
 TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s1, results$nmb100s2)), opt=1, title="Sensitivity Scenario 1 WIP 100k")
-TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s2, results$nmb100s3)), opt=1, title="Sensitivity Scenario 2 WIP 100k")
+
 TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s2, results$nmb100s3)), opt=2, title="Sensitivity Scenario 3 WIP 100k")
 ```
 
-## Percent of Runs Greater than Zero
+# Sensitivity Scenario 1 Compared to 0 (Top 15)
+
+```{r}
+pdf("PSA-Scenario1-top15.pdf")
+TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s1, results$nmb100s2)), opt=1,
+           title="", #"Sensitivity Scenario 1 (Top 15)",
+           txtsize = 12,
+           select=c(
+             "1y risk MI Non-LOF Ticagrelor",
+             "1y risk MI LOF Clopidogrel",
+             "Monthly Cost of Ticagrelor",
+             "30d risk MI Non-LOF Ticagrelor",
+             "Case Fatality LOF Clopidogrel",
+             "30d risk ST Non-LOF Ticagrelor",
+             "30d risk Stroke Non-LOF Ticagrelor",
+             "30d risk MI LOF Clopidogrel",
+             "1y risk MI Non-LOF Clopidogrel",
+             "Case Fatality Non-LOF Ticagrelor",
+             "1y risk ST LOF Ticagrelor",
+             "30d risk ST LOF Clopidogrel",
+             "1y risk MI LOF Ticagrelor",
+             "Case Fatality Non-LOF Clopidogrel",
+             "30d risk Stroke Non-LOF Clopidogrel"
+             ) )
+dev.off()
+```
+
+## Sensitivity Scenario 3 compared to 0 (Top 15)
+
+```{r}
+pdf("PSA-Scenario3-top15.pdf")
+TornadoOpt(as.matrix(params), as.matrix(cbind(results$nmb100s3, results$nmb100s2)), opt=1,
+           title="", #"Sensitivity Scenario 3 (Top 15)",
+           txtsize = 12,
+           select=c(
+             "1y risk MI LOF Clopidogrel",
+             "Case Fatality LOF Clopidogrel",
+             "30d risk MI LOF Clopidogrel",
+             "30d risk Stroke LOF Clopidogrel",
+             "30d risk ST LOF Clopidogrel",
+             "1y risk MI LOF Ticagrelor",
+             "1y risk ST LOF Ticagrelor",
+             "30d risk MI LOF Ticagrelor",
+             "Monthly Cost of Ticagrelor",
+             "30d risk Stroke LOF Ticagrelor",
+             "Case Fatality LOF Ticagrelor",
+             "30d risk ST LOF Ticagrelor",
+             "Monthly Cost of Clopidogrel",
+             "Relative risk Extracranial Bleed Ticagrelor",
+             "Cost of Single Test"
+             ) )
+dev.off()
+```
+
+
+## Acceptability
 
 ```{r}
 percent <- function(name) paste0(round(100*sum(results[,name]>0)/length(results[,name]), 2), "%")
 ```
 
 * `r percent("nmb100s1")` of scenario 1 net monetary benefits are greater than zero at a williness to pay threshold of $100k.
-* `r percent("nmb100s2")` of scenario 2 net monetary benefits are greater than zero at a williness to pay threshold of $100k.
 * `r percent("nmb100s3")` of scenario 3 net monetary benefits are greater than zero at a williness to pay threshold of $100k.
 * `r percent("nmb50s1")` of scenario 1 net monetary benefits are greater than zero at a williness to pay threshold of $50k.
-* `r percent("nmb50s2")` of scenario 2 net monetary benefits are greater than zero at a williness to pay threshold of $50k.
 * `r percent("nmb50s3")` of scenario 3 net monetary benefits are greater than zero at a williness to pay threshold of $50k.
+
+
+```{r, warnings=FALSE, comment="", echo=FALSE, message=FALSE}
+library(dampack)
+
+wtp <- seq(0, 2e5, by=1e4)
+postscript("ceaf.pdf")
+ceaf(v.wtp = wtp, strategies = c(0,1,3),
+     m.e = results[,c("dQALY0", "dQALY1", "dQALY3")],
+     m.c = results[,c("dCOST0", "dCOST1", "dCOST3")])$gg.ceaf +
+scale_x_continuous(breaks=number_ticks(10))
+dev.off()
+```
 
 ## Delta Plots
 
@@ -230,17 +299,6 @@ abline(a=0, b=100000, col='red')
 abline(a=0, b=50000, col='blue')
 legend(-0.025, 2000, c("100k", "50k"), col=c("red", "blue"), lty=1)
 
-plot(results$dQALY2 - results$dQALY0, 
-     results$dCOST2 - results$dCOST0,
-     main="Scenario 2", sub="Cost Effectiveness compared to reference",
-     xlab="Delta dQALY",
-     ylab="Delta dCOST",
-     col=rgb(0,0,0,0.25),
-     pch=16)
-abline(a=0, b=100000, col='red')
-abline(a=0, b=50000, col='blue')
-legend(-0.0155, -1875, c("100k", "50k"), col=c("red", "blue"), lty=1)
-
 plot(results$dQALY3 - results$dQALY0, 
      results$dCOST3 - results$dCOST0,
      main="Scenario 3", sub="Cost Effectiveness compared to reference",
@@ -253,60 +311,4 @@ abline(a=0, b=50000, col='blue')
 legend(0.0225, 1500, c("100k", "50k"), col=c("red", "blue"), lty=1, bg="white")
 ```
 
-## Saltelli Method Results 100k WTP Scenario 2
 
-```{r, results='asis'}
-single <- read.csv("saltelli-single-2.txt", header=FALSE)
-total  <- read.csv("saltelli-total-2.txt",  header=FALSE)
-
-saltelli <- data.frame(Variable = ranges$Variable,
-                       Single   = unname(single),
-                       Total    = unname(total))
-
-tangram(saltelli[order(saltelli$Single, decreasing=TRUE),c("Variable", "Single")],
-  as.character=TRUE,
-  id="Single 2",
-  caption="Saltelli Ranking for Direct Contribution to Variance",
-  pct_width=0.8,
-  footnote="Scaled to 100%",
-  style="nejm") %>% del_col(1)
-
-
-tangram(saltelli[order(saltelli$Total, decreasing=TRUE),c("Variable", "Total")],
-  as.character=TRUE,
-  id="Total 2",
-  caption="Saltelli Ranking Including All Interactions to Variance",
-  footnote="Total exceeds 100% since variance contribution occurs in multiple terms via interaction",
-  pct_width=0.8,
-  style="nejm") %>% del_col(1)
-```
-
-
-
-## Saltelli Method Results 100k WTP Scenario 3
-
-```{r, results='asis'}
-single <- read.csv("saltelli-single-3.txt", header=FALSE)
-total  <- read.csv("saltelli-total-3.txt",  header=FALSE)
-
-saltelli <- data.frame(Variable = ranges$Variable,
-                       Single   = unname(single),
-                       Total    = unname(total))
-
-tangram(saltelli[order(saltelli$Single, decreasing=TRUE),c("Variable", "Single")],
-  as.character=TRUE,
-  id="Single 3",
-  caption="Saltelli Ranking for Direct Contribution to Variance",
-  pct_width=0.8,
-  footnote="Scaled to 100%",
-  style="nejm") %>% del_col(1)
-
-
-tangram(saltelli[order(saltelli$Total, decreasing=TRUE),c("Variable", "Total")],
-  as.character=TRUE,
-  id="Total 3",
-  caption="Saltelli Ranking Including All Interactions to Variance",
-  footnote="Total exceeds 100% since variance contribution occurs in multiple terms via interaction 3",
-  pct_width=0.8,
-  style="nejm") %>% del_col(1)
-```
